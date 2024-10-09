@@ -3,12 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Location Tracking</title>
+    <title>Location Tracking with Route</title>
     
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <!-- Leaflet JavaScript -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    
+    <!-- Leaflet Routing Machine CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
+    <!-- Leaflet Routing Machine JavaScript -->
+    <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+
+    <!-- Leaflet Geocoder -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+    
     <style>
         body {
             margin: 0;
@@ -33,21 +43,37 @@
             addMarker(data.latitude, data.longitude);
         });
 
+        // Initialize map
         var map = L.map('map').setView([0, 0], 2);
 
+        // Add OpenStreetMap tile layer
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
         }).addTo(map);
 
+        // Array to store the coordinates
+        var pathCoordinates = [];
+
+        // Routing control (to be updated with each new marker)
+        var routingControl = L.Routing.control({
+            waypoints: [],
+            routeWhileDragging: false,
+            geocoder: L.Control.Geocoder.nominatim(),  // Added geocoder
+            createMarker: function() { return null; } // Disable automatic markers from routing control
+        }).addTo(map);
+
+        // Function to add a marker and calculate the route
         function addMarker(lat, lng) {
-            map.eachLayer(function (layer) {
-                if (layer instanceof L.Marker) {
-                    map.removeLayer(layer);
-                }
-            });
+            // Add the new coordinates to the array
+            pathCoordinates.push(L.latLng(lat, lng));
 
-            var marker = L.marker([lat, lng]).addTo(map);
+            // Add a new marker at the current location
+            L.marker([lat, lng]).addTo(map);
 
+            // Update the routing control with the new path
+            routingControl.setWaypoints(pathCoordinates);
+
+            // Set the view to the new marker
             map.setView([lat, lng], 13);
         }
     </script>
